@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,12 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bbc.polly.wordle.ui.theme.WordleTheme
-import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +36,7 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     WordGrid(gridState.lastGuessedWord,
+                        gridState.gridLetters,
                         gridState.results,
                         gridState::letterEntered,
                         gridState::guess
@@ -51,10 +49,11 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WordGrid(lastGuessedWord: String,
-             results: List<LetterPosition>,
-             letterEntered: (Int, String) -> Unit,
-             guess: () -> List<LetterPosition>
+private fun WordGrid(lastGuessedWord: String,
+                     gridLetters: List<Char>,
+                     results: List<LetterStatus>,
+                     letterEntered: (Int, Char) -> Unit,
+                     guess: () -> List<LetterStatus>
 ) {
 
     Log.d("polly", "recomposing grid. last guessed: $lastGuessedWord")
@@ -69,6 +68,7 @@ fun WordGrid(lastGuessedWord: String,
             items(results.size) { index ->
                 LetterCell(
                     index,
+                    gridLetters[index],
                     results[index],
                     letterEntered
                 )
@@ -87,30 +87,31 @@ fun WordGrid(lastGuessedWord: String,
     }
 }
 
-fun colourOf(letterPosition: LetterPosition): Color =
-    when (letterPosition) {
-        LetterPosition.WRONG -> Color.Transparent
-        LetterPosition.RIGHT_IN_RIGHT_PLACE -> Color.Green
-        LetterPosition.RIGHT_IN_WRONG_PLACE -> Color.Yellow
+private fun colourOf(letterStatus: LetterStatus): Color =
+    when (letterStatus) {
+        LetterStatus.WRONG -> Color.Transparent
+        LetterStatus.RIGHT_IN_RIGHT_PLACE -> Color.Green
+        LetterStatus.RIGHT_IN_WRONG_PLACE -> Color.Yellow
     }
 
 @Composable
-fun LetterCell(
+private fun LetterCell(
     index: Int,
-    letterPosition: LetterPosition,
-    letterEntered: (Int, String) -> Unit
+    letter: Char,
+    letterStatus: LetterStatus,
+    letterEntered: (Int, Char) -> Unit
 ) {
-    var text by remember { mutableStateOf(" ") }
     val focusManager = LocalFocusManager.current
 
-    Log.d("polly", "recomposing letter $index")
+    Log.d("polly", "recomposing: letter $index = $letter")
 
     TextField(
-        value = text,
+        value = letter.toString(),
         onValueChange = {
-            text = it.uppercase()
-            letterEntered(index, text)
-            focusManager.moveFocus(FocusDirection.Right)
+            if (it.isNotEmpty()) {
+                letterEntered(index, it.uppercase().first())
+                focusManager.moveFocus(FocusDirection.Right)
+            }
         },
         maxLines = 1,
         textStyle = TextStyle(
@@ -119,7 +120,7 @@ fun LetterCell(
             fontSize = 42.sp
         ),
         modifier = Modifier
-            .background(colourOf(letterPosition))
+            .background(colourOf(letterStatus))
             .border(1.dp, Color.Cyan)
             .padding(6.dp)
     )
@@ -128,9 +129,12 @@ fun LetterCell(
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val gridState = GridState()
+    val gridState = GridState().also {
+        it.gridLetters.addAll("ASDFGHJKLQ               ".toList())
+    }
     WordleTheme {
         WordGrid(gridState.lastGuessedWord,
+            gridState.gridLetters,
             gridState.results,
             gridState::letterEntered,
             gridState::guess

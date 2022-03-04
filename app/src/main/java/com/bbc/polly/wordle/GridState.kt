@@ -3,52 +3,59 @@ package com.bbc.polly.wordle
 import android.util.Log
 import androidx.compose.runtime.*
 
-enum class LetterPosition { RIGHT_IN_RIGHT_PLACE, RIGHT_IN_WRONG_PLACE, WRONG }
+enum class LetterStatus { RIGHT_IN_RIGHT_PLACE, RIGHT_IN_WRONG_PLACE, WRONG }
 
 class GridState {
 
     private val secretWord: CharArray = "PANTS".toCharArray()
 
-    private var lastIndex by mutableStateOf(0)
-
-    private var grid = List(25) { (' ') }.toMutableStateList()
-
-    var lastGuessedWord by mutableStateOf("hello")
-
-    var results = List(25) { LetterPosition.WRONG }.toMutableStateList()
-
-    fun letterEntered(index: Int, letterString: String) {
-        grid[index] = letterString.trim().firstOrNull() ?: ' '
-        lastIndex = index
+    companion object {
+        const val NUM_ROWS = 5
+        const val NUM_COLS = 5
+        const val NUM_LETTERS = NUM_ROWS * NUM_COLS
     }
 
-    fun guess(index: Int = lastIndex): List<LetterPosition> {
-        val rowStart = (index / 5) * 5
+    private var numGuesses = mutableStateOf(0)
+    val gridLetters = List(NUM_LETTERS) { (' ') }.toMutableStateList()
+    val results = List(NUM_LETTERS) { LetterStatus.WRONG }.toMutableStateList()
+
+    fun letterEntered(index: Int, letter: Char) {
+        gridLetters[index] = letter
+    }
+
+    val lastGuessedWord: String
+        get() = if (numGuesses.value == 0) ""
+            else {
+                val startPos = (numGuesses.value - 1) * NUM_COLS
+                gridLetters.subList(startPos, startPos+NUM_COLS).toString()
+            }
+
+    fun guess(): List<LetterStatus> {
+        val rowStart = numGuesses.value * NUM_COLS
         val guess = StringBuilder()
-        for (i in rowStart..rowStart+4) {
-            guess.append(grid[i])
+        for (i in rowStart until rowStart+NUM_COLS) {
+            guess.append(gridLetters[i])
         }
         val word = guess.toString()
-        lastGuessedWord = word
         val lastGuess = guessWord(word)
-//        Log.d("polly", "last guess $word result $lastGuess")
-        for (i in 0 until 5) {
+        Log.d("polly", "last guess $word result $lastGuess")
+        for (i in 0 until NUM_COLS) {
             results[rowStart + i] = lastGuess[i]
         }
         return lastGuess
     }
 
-    fun guessWord(word: String): List<LetterPosition> {
-        val result = List(5) { i ->
+    fun guessWord(word: String): List<LetterStatus> {
+        val result = List(NUM_COLS) { i ->
             when {
                 word[i] == secretWord[i] -> {
-                    LetterPosition.RIGHT_IN_RIGHT_PLACE
+                    LetterStatus.RIGHT_IN_RIGHT_PLACE
                 }
                 secretWord.contains(word[i]) -> {
-                    LetterPosition.RIGHT_IN_WRONG_PLACE
+                    LetterStatus.RIGHT_IN_WRONG_PLACE
                 }
                 else -> {
-                    LetterPosition.WRONG
+                    LetterStatus.WRONG
                 }
             }
         }
