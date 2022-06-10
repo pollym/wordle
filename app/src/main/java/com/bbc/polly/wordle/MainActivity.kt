@@ -4,11 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -54,8 +51,8 @@ private fun WordGrid(gridUiState: GridUiState, update: () -> Unit) {
                 row.forEach { letter ->
                     Column(
                         Modifier
-                            .width(128.dp)
-                            .height(128.dp)
+                            .width(72.dp)
+                            .height(72.dp)
                     ) {
                         LetterCell(letter, update)
                     }
@@ -86,11 +83,13 @@ private fun LetterCell(letter: String, update: () -> Unit) {
         textStyle = TextStyle(
             color = Color.White,
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 42.sp
+            fontSize = 36.sp
         ),
         modifier = Modifier
             .border(1.dp, Color.Cyan)
             .padding(6.dp)
+            .width(64.dp)
+            .height(64.dp)
     )
 }
 
