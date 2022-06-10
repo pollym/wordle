@@ -13,9 +13,12 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,14 +36,18 @@ class MainActivity : ComponentActivity() {
                 val viewModel: GridViewModel =
                     viewModel(factory = GridViewModel.Factory(serviceContainer))
 
-                WordGrid(viewModel.gridUiState.collectAsState().value) { viewModel.update() }
+                WordGrid(viewModel.gridUiStateFlow.collectAsState().value, { viewModel.updateGrid() }, { letter ->  viewModel.updateLetter(letter) })
             }
         }
     }
 }
 
 @Composable
-private fun WordGrid(gridUiState: GridUiState, update: () -> Unit) {
+private fun WordGrid(
+    gridUiState: GridUiState,
+    updateGrid: () -> Unit,
+    updateLetter: (GridUiState.Letter) -> Unit
+) {
     Log.d("polly", "recomposing grid.")
     Column {
         Row(horizontalArrangement = Arrangement.Center) {
@@ -54,14 +61,14 @@ private fun WordGrid(gridUiState: GridUiState, update: () -> Unit) {
                             .width(72.dp)
                             .height(72.dp)
                     ) {
-                        LetterCell(letter, update)
+                        LetterCell(letter, updateLetter)
                     }
                 }
             }
         }
         Row(horizontalArrangement = Arrangement.Center) {
             Button(
-                onClick = { update() },
+                onClick = { updateGrid() },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Yellow
                 )
@@ -73,21 +80,24 @@ private fun WordGrid(gridUiState: GridUiState, update: () -> Unit) {
 }
 
 @Composable
-private fun LetterCell(letter: String, update: () -> Unit) {
+private fun LetterCell(letter: GridUiState.Letter, updateLetter: (GridUiState.Letter) -> Unit) {
+    val focusManager = LocalFocusManager.current
     TextField(
-        value = letter,
-        onValueChange = {
-            update()
+        value = letter.value,
+        onValueChange = { newValue ->
+            updateLetter(GridUiState.Letter(letter.position, newValue))
+            if (newValue.isNotBlank()) focusManager.moveFocus(FocusDirection.Next)
         },
         maxLines = 1,
         textStyle = TextStyle(
             color = Color.White,
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 36.sp
+            fontSize = 24.sp,
+            textAlign = TextAlign.Center
         ),
         modifier = Modifier
             .border(1.dp, Color.Cyan)
-            .padding(6.dp)
+            .padding(4.dp)
             .width(64.dp)
             .height(64.dp)
     )
@@ -128,6 +138,6 @@ fun DefaultPreview() {
                 'g',
             )
         )
-        WordGrid(GridUiState(gridState)) {}
+        WordGrid(GridUiState(gridState), {}) {}
     }
 }

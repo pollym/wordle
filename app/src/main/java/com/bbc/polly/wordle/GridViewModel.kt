@@ -12,17 +12,27 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
         val letters: List<Char?>
     )
 
-    private val gridState = MutableStateFlow(GridState(secretWordService.secretWord, List(25) { null } ))
+    private val gridStateFlow =
+        MutableStateFlow(GridState(secretWordService.secretWord, List(25) { null }))
 
-    val gridUiState = gridState.map { GridUiState(it) }
+    val gridUiStateFlow = gridStateFlow.map { GridUiState(it) }
         .stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-            GridUiState(gridState.value)
+            GridUiState(gridStateFlow.value)
         )
 
-    fun update() {
-        gridState.update { gridState -> GridState(gridState.secretWord, gridUiState.value.letters) }
+    fun updateGrid() {
+        //TODO call this on guess!
+//        gridState.update { gridState -> GridState(gridState.secretWord, gridUiState.value.gridState.letters) }
+    }
+
+    fun updateLetter(newLetter: GridUiState.Letter) {
+        gridStateFlow.value = gridStateFlow.value.copy(
+            letters = gridUiStateFlow.value.replaceLetter(
+                newLetter
+            )
+        )
     }
 
     class Factory(private val serviceContainer: ServiceContainer) : ViewModelProvider.Factory {
@@ -35,19 +45,27 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
 
 }
 
-class GridUiState(gridState: GridViewModel.GridState) {
-    val letters = gridState.letters
+class GridUiState(val gridState: GridViewModel.GridState) {
 
-    fun rows(): List<List<String>> {
-        val rows = mutableListOf<List<String>>()
-        var row: MutableList<String> = mutableListOf()
-        letters.forEachIndexed { i, letter ->
-            if (i%5 == 0) {
+    fun rows(): List<List<Letter>> {
+        val rows = mutableListOf<List<Letter>>()
+        var row: MutableList<Letter> = mutableListOf()
+        gridState.letters.forEachIndexed { i, letter ->
+            if (i % 5 == 0) {
                 row = mutableListOf()
                 rows.add(row)
             }
-            row.add(letter?.toString() ?: " ")
+            val displayLetter = Letter(i, letter?.toString() ?: " ")
+            row.add(displayLetter)
         }
         return rows.toList()
     }
+
+    fun replaceLetter(newLetter: Letter): List<Char?> {
+        val newLetters = gridState.letters.toMutableList()
+        newLetters[newLetter.position] = newLetter.value.trim().singleOrNull()
+        return newLetters.toList()
+    }
+
+    data class Letter(val position: Int, val value: String)
 }
