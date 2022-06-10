@@ -45,7 +45,7 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
 
 }
 
-class GridUiState(val gridState: GridViewModel.GridState) {
+class GridUiState(private val gridState: GridViewModel.GridState) {
 
     fun rows(): List<List<Letter>> {
         val rows = mutableListOf<List<Letter>>()
