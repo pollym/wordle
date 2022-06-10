@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bbc.polly.wordle.service.SecretWordService
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
     data class GridState(
@@ -42,30 +45,4 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
             return GridViewModel(serviceContainer.secretWordService) as T
         }
     }
-
-}
-
-class GridUiState(private val gridState: GridViewModel.GridState) {
-
-    fun rows(): List<List<Letter>> {
-        val rows = mutableListOf<List<Letter>>()
-        var row: MutableList<Letter> = mutableListOf()
-        gridState.letters.forEachIndexed { i, letter ->
-            if (i % 5 == 0) {
-                row = mutableListOf()
-                rows.add(row)
-            }
-            val displayLetter = Letter(i, letter?.toString() ?: " ")
-            row.add(displayLetter)
-        }
-        return rows.toList()
-    }
-
-    fun replaceLetter(newLetter: Letter): List<Char?> {
-        val newLetters = gridState.letters.toMutableList()
-        newLetters[newLetter.position] = newLetter.value.trim().singleOrNull()
-        return newLetters.toList()
-    }
-
-    data class Letter(val position: Int, val value: String)
 }
