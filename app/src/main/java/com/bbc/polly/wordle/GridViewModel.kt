@@ -15,11 +15,6 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
         val secretWord: String,
         val guesses: List<List<Char>> = mutableListOf(mutableListOf())
     )
-
-    class GridUiState(private val gridState: GridState) {
-
-    }
-
     val gridState = MutableStateFlow(GridState(secretWordService.secretWord))
 
     val gridUiState = gridState.map { GridUiState(it) }
@@ -36,5 +31,9 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
             return GridViewModel(serviceContainer.secretWordService) as T
         }
     }
+
+}
+
+class GridUiState(private val gridState: GridViewModel.GridState) {
 
 }

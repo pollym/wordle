@@ -17,6 +17,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -25,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bbc.polly.wordle.service.SecretWordService
 import com.bbc.polly.wordle.ui.theme.WordleTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
         val serviceContainer = (applicationContext as WordleApp).serviceContainer
         setContent {
             WordleTheme {
-                WordGrid(viewModel(factory = GridViewModel.Factory(serviceContainer)))
+                val viewModel: GridViewModel =
+                    viewModel(factory = GridViewModel.Factory(serviceContainer))
+
+                WordGrid(viewModel.gridUiState.collectAsState().value)
             }
         }
     }
@@ -44,12 +47,12 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WordGrid(viewModel: GridViewModel) {
+private fun WordGrid(gridUiState: GridUiState) {
     Log.d("polly", "recomposing grid.")
     Column {
-            Row(horizontalArrangement = Arrangement.Center) {
-                Text("last guessed word: ")
-            }
+        Row(horizontalArrangement = Arrangement.Center) {
+            Text("last guessed word: ")
+        }
         LazyVerticalGrid(
             cells = GridCells.Fixed(5)
         ) {
@@ -59,7 +62,7 @@ private fun WordGrid(viewModel: GridViewModel) {
         }
         Row(horizontalArrangement = Arrangement.Center) {
             Button(
-                onClick = {  },
+                onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Yellow
                 )
@@ -94,6 +97,6 @@ private fun LetterCell() {
 fun DefaultPreview() {
 
     WordleTheme {
-        WordGrid(GridViewModel(SecretWordService()))
+        WordGrid(GridUiState(GridViewModel.GridState("HELLO", listOf(listOf()))))
     }
 }
