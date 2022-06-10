@@ -6,10 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.Button
@@ -39,30 +36,35 @@ class MainActivity : ComponentActivity() {
                 val viewModel: GridViewModel =
                     viewModel(factory = GridViewModel.Factory(serviceContainer))
 
-                WordGrid(viewModel.gridUiState.collectAsState().value)
+                WordGrid(viewModel.gridUiState.collectAsState().value) { viewModel.update() }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WordGrid(gridUiState: GridUiState) {
+private fun WordGrid(gridUiState: GridUiState, update: () -> Unit) {
     Log.d("polly", "recomposing grid.")
     Column {
         Row(horizontalArrangement = Arrangement.Center) {
             Text("last guessed word: ")
         }
-        LazyVerticalGrid(
-            cells = GridCells.Fixed(5)
-        ) {
-            items(5) {
-                LetterCell()
+        gridUiState.rows().forEach { row ->
+            Row(horizontalArrangement = Arrangement.Center) {
+                row.forEach { letter ->
+                    Column(
+                        Modifier
+                            .width(128.dp)
+                            .height(128.dp)
+                    ) {
+                        LetterCell(letter, update)
+                    }
+                }
             }
         }
         Row(horizontalArrangement = Arrangement.Center) {
             Button(
-                onClick = { },
+                onClick = { update() },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Yellow
                 )
@@ -74,11 +76,11 @@ private fun WordGrid(gridUiState: GridUiState) {
 }
 
 @Composable
-private fun LetterCell() {
+private fun LetterCell(letter: String, update: () -> Unit) {
     TextField(
-        value = "",
+        value = letter,
         onValueChange = {
-
+            update()
         },
         maxLines = 1,
         textStyle = TextStyle(
@@ -97,6 +99,36 @@ private fun LetterCell() {
 fun DefaultPreview() {
 
     WordleTheme {
-        WordGrid(GridUiState(GridViewModel.GridState("HELLO", listOf(listOf()))))
+        val gridState = GridViewModel.GridState(
+            "HELLO",
+            listOf(
+                'a',
+                's',
+                'd',
+                'f',
+                'g',
+                'a',
+                's',
+                'd',
+                'f',
+                'g',
+                'a',
+                's',
+                'd',
+                'f',
+                'g',
+                'a',
+                's',
+                'd',
+                'f',
+                'g',
+                'a',
+                's',
+                'd',
+                'f',
+                'g',
+            )
+        )
+        WordGrid(GridUiState(gridState)) {}
     }
 }
