@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 val viewModel: GridViewModel =
                     viewModel(factory = GridViewModel.Factory(serviceContainer))
 
-                WordGrid(viewModel.gridUiStateFlow.collectAsState().value, { viewModel.updateGrid() }, { letter ->  viewModel.updateLetter(letter) })
+                WordGrid(viewModel.gridUiStateFlow.collectAsState().value, { viewModel.updateGrid() }, { position, value ->  viewModel.updateLetter(position, value) })
             }
         }
     }
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
 private fun WordGrid(
     gridUiState: GridUiState,
     updateGrid: () -> Unit,
-    updateLetter: (GridUiState.Letter) -> Unit
+    updateLetter: (Int, String) -> Unit
 ) {
     Log.d("polly", "recomposing grid.")
     Column {
@@ -80,13 +80,13 @@ private fun WordGrid(
 }
 
 @Composable
-private fun LetterCell(letter: GridUiState.Letter, updateLetter: (GridUiState.Letter) -> Unit) {
+private fun LetterCell(letter: GridUiState.Letter, updateLetter: (Int, String) -> Unit) {
     val focusManager = LocalFocusManager.current
     TextField(
         value = letter.value,
         onValueChange = { newValue ->
-            updateLetter(GridUiState.Letter(letter.position, newValue))
-            if (newValue.isNotBlank()) focusManager.moveFocus(FocusDirection.Next)
+            updateLetter(letter.position, newValue)
+            if (newValue.isNotBlank()) focusManager.moveFocus(FocusDirection.Next) //TODO pull this logic into UIState class
         },
         maxLines = 1,
         textStyle = TextStyle(
@@ -138,6 +138,6 @@ fun DefaultPreview() {
                 'g',
             )
         )
-        WordGrid(GridUiState(gridState), {}) {}
+        WordGrid(GridUiState(gridState), {}) { _,_ -> }
     }
 }

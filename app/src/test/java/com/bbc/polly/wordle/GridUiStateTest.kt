@@ -36,7 +36,7 @@ aaaaa
     fun `can replace single letter in grid`() {
         val letters = List(25) { i -> if (i < 5) 'a' else null }
         val grid = createGrid(letters)
-        val replaced = grid.replaceLetter(GridUiState.Letter(1, "b"))
+        val replaced = grid.replaceLetter(GridUiState.Letter(1, "b", true))
         val expectedState = """
 abaaa
 -----
@@ -50,9 +50,12 @@ abaaa
     private fun createGrid(letters: List<Char?>) =
         GridUiState(GridViewModel.GridState("PANTS", letters))
 
+    /**
+     * Helper function which maps a multiline string to a list of chars.
+     * Strips out line breaks and whitespace & replaces hyphens with nulls.
+     * This makes it handy to write out an expected grid state & assert against it.
+     */
     private fun convertToChars(expectedState: String): List<Char?> {
-        println("expectedState")
-        println(expectedState)
         val letters = mutableListOf<Char?>()
         expectedState.filter { it.isLetter() || it == '-' }.forEach() { letter ->
             letters.add(
@@ -64,13 +67,11 @@ abaaa
     }
 
     private fun convertToGridRows(expectedState: String): List<List<GridUiState.Letter>> {
-        println("expectedState")
-        println(expectedState)
         val rows = mutableListOf<List<GridUiState.Letter>>()
         expectedState.lines().forEachIndexed() { i, line ->
             val row: MutableList<GridUiState.Letter> = mutableListOf()
             line.forEachIndexed() { j, letterChar ->
-                row.add(GridUiState.Letter(i * 5 + j, mapCharToString(letterChar)))
+                row.add(GridUiState.Letter(i * 5 + j, mapCharToString(letterChar), true))
             }
             assertEquals(5, row.size)
             rows.add(row)

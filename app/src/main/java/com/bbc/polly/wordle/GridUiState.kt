@@ -10,7 +10,7 @@ class GridUiState(private val gridState: GridViewModel.GridState) {
                 row = mutableListOf()
                 rows.add(row)
             }
-            val displayLetter = Letter(i, letter?.toString() ?: " ")
+            val displayLetter = Letter(i, letter?.toString() ?: " ", true) //TODO figure out if editable
             row.add(displayLetter)
         }
         return rows.toList()
@@ -22,5 +22,5 @@ class GridUiState(private val gridState: GridViewModel.GridState) {
         return newLetters.toList()
     }
 
-    data class Letter(val position: Int, val value: String)
+    data class Letter(val position: Int, val value: String, val editable: Boolean)
 }

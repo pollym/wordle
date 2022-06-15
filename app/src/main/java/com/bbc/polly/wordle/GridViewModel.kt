@@ -30,10 +30,10 @@ class GridViewModel(secretWordService: SecretWordService) : ViewModel() {
 //        gridState.update { gridState -> GridState(gridState.secretWord, gridUiState.value.gridState.letters) }
     }
 
-    fun updateLetter(newLetter: GridUiState.Letter) {
+    fun updateLetter(position: Int, value: String) {
         gridStateFlow.value = gridStateFlow.value.copy(
             letters = gridUiStateFlow.value.replaceLetter(
-                newLetter
+                GridUiState.Letter(position, value, true)
             )
         )
     }
